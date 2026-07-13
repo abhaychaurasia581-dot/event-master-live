@@ -1,0 +1,58 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: event-management-backend-hpa
+  namespace: default
+  labels:
+    app: event-backend
+    tier: backend
+spec:
+  # Target the Node.js backend Deployment
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: event-management-backend
+    
+  # Always keep at least 2 pods running for High Availability
+  minReplicas: 2
+  
+  # Scale up to a maximum of 10 pods during heavy traffic spikes
+  maxReplicas: 10
+  
+  # Scaling Triggers (Metrics)
+  metrics:
+    # Scale up if average CPU utilization goes above 70% of requested CPU (200m)
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+          
+    # Scale up if average Memory utilization goes above 80% of requested Memory (256Mi)
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+          
+  # Custom scaling behavior for smoother transitions
+  behavior:
+    scaleDown:
+      # Wait 5 minutes before scaling down to prevent thrashing
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+    scaleUp:
+      # Rapid scale-up to handle sudden bursts
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 4
+          periodSeconds: 15

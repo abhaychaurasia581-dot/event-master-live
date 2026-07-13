@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-management-backend
+  namespace: default
+  labels:
+    app: event-backend
+    tier: backend
+    environment: production
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: event-backend
+  # Strict Rolling Update Strategy ensures zero-downtime deployments
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: event-backend
+        tier: backend
+        environment: production
+    spec:
+      # Allows active requests to finish processing before forcefully shutting down the container
+      terminationGracePeriodSeconds: 30
+      
+      # Pod-level security context enforcing non-root execution (maps to the 'node' user 1000)
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+
+      # Soft Pod Anti-Affinity to distribute replicas across multiple physical nodes for high availability
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - event-backend
+                topologyKey: "kubernetes.io/hostname"
+
+      containers:
+        - name: event-management-backend
+          image: event-management-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+              name: http
+          
+          # Container-level security context
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+          
+          # Strict Resource Management to prevent noisy neighbor problems and OOM crashes
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          
+          # Liveness Probe: Restarts the container if the app crashes or deadlocks
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          
+          # Readiness Probe: Stops routing traffic to the container if it's too busy or not initialized
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          
+          # Secure Environment Variable Injection via Kubernetes Secrets
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "5000"
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: event-backend-secrets
+                  key: DB_HOST
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: event-backend-secrets
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: event-backend-secrets
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: event-backend-secrets
+                  key: DB_NAME
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: event-backend-secrets
+                  key: REDIS_HOST
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: event-backend-secrets
+                  key: JWT_SECRET

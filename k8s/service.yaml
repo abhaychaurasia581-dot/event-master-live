@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: event-management-service
+  namespace: default
+  labels:
+    app: event-backend
+    tier: backend
+    environment: production
+spec:
+  # ==============================================================================
+  # SERVICE TYPE
+  # Default is 'ClusterIP' to keep the API secure within the internal cluster network.
+  # External traffic will be routed through the Ingress controller.
+  # (To expose directly in a cloud environment without Ingress, change to 'LoadBalancer')
+  # ==============================================================================
+  type: ClusterIP
+  
+  # ==============================================================================
+  # POD SELECTOR
+  # CRITICAL: These must exactly match the template labels in deployment.yaml
+  # This enables the Service to discover and round-robin traffic to all healthy replicas
+  # ==============================================================================
+  selector:
+    app: event-backend
+    tier: backend
+    environment: production
+  
+  # ==============================================================================
+  # PORT MAPPING
+  # ==============================================================================
+  ports:
+    - name: http
+      protocol: TCP
+      
+      # The port the Service exposes internally (e.g., http://event-management-service:80)
+      port: 80
+      
+      # The actual port the Node.js application container is listening on
+      targetPort: 5000

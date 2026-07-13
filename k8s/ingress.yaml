@@ -1,0 +1,84 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: event-management-ingress
+  namespace: default
+  annotations:
+    # Define the Ingress class
+    kubernetes.io/ingress.class: "nginx"
+    
+    # ==========================================================================
+    # Security & Performance Tuning Annotations
+    # ==========================================================================
+    # Enforce strict HTTPS by redirecting all HTTP traffic
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    
+    # Limit max payload size to prevent DDoS via massive file uploads
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    
+    # Timeout settings to drop hanging or slow connections quickly (mitigates Slowloris)
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "15"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
+    
+    # Rate Limiting at the edge (100 req/sec per IP) before hitting the application
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    
+    # Inject core security headers directly at the edge layer
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "Strict-Transport-Security: max-age=31536000; includeSubDomains";
+
+spec:
+  # ============================================================================
+  # TLS / HTTPS Configuration
+  # Expects a Kubernetes TLS Secret (often auto-provisioned via Cert-Manager / Let's Encrypt)
+  # ============================================================================
+  tls:
+    - hosts:
+        - api.eventsystem.com
+        - event-system.local
+      secretName: event-system-tls-secret
+
+  # ============================================================================
+  # Traffic Routing Rules (Path-Based)
+  # ============================================================================
+  rules:
+    # 1. Production API Domain
+    - host: api.eventsystem.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: event-management-service
+                port:
+                  number: 80
+          - path: /health
+            pathType: Exact
+            backend:
+              service:
+                name: event-management-service
+                port:
+                  number: 80
+
+    # 2. Local Development Domain
+    - host: event-system.local
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: event-management-service
+                port:
+                  number: 80
+          - path: /health
+            pathType: Exact
+            backend:
+              service:
+                name: event-management-service
+                port:
+                  number: 80
