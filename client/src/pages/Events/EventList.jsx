@@ -9,6 +9,8 @@ import { wishlistApi } from '../../services/wishlistApi';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/authStore';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const EventCard = ({ event, isInitiallyWishlisted }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
