@@ -163,6 +163,7 @@ function App() {
               <Route path="/admin/bookings" element={isAdmin ? <AdminBookings /> : <Navigate to="/admin/login" />} />
               <Route path="/admin/revenue" element={isAdmin ? <AdminRevenue /> : <Navigate to="/admin/login" />} />
               <Route path="/admin/create-event" element={isAdmin ? <CreateEvent /> : <Navigate to="/admin/login" />} />
+              <Route path="/admin/events/:id/edit" element={isAdmin ? <EditEvent /> : <Navigate to="/admin/login" />} />
             </Route>
           </Route>
         </Routes>
