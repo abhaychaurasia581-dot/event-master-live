@@ -30,8 +30,8 @@ const generateAccessAndRefreshTokens = async (userId) => {
 
 const cookieOptions = {
   httpOnly: true,
-  secure: env.nodeEnv === 'production',
-  sameSite: 'strict',
+  secure: true, // Always true for cross-origin 'none'
+  sameSite: 'none', // Required for cross-domain cookies (Render/Vercel)
   maxAge: 15 * 24 * 60 * 60 * 1000, // 15 days
 };
 
