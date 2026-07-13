@@ -155,10 +155,41 @@ exports.updateEvent = asyncHandler(async (req, res) => {
     throw new ApiError(403, 'You do not have permission to update this event');
   }
 
-  const updateData = {
-    ...req.body,
-    updated_by: req.user.id
-  };
+  const { title, date, time, location, capacity, price, description, status, featured } = req.body;
+
+  let updateData = { updated_by: req.user.id };
+
+  if (title) {
+    updateData.title = title;
+    updateData.slug = title.toLowerCase().replace(/\s+/g, '-');
+  }
+  if (description) updateData.description = description;
+  if (location) {
+    updateData.venue = location;
+    updateData.city = location.split(',')[0] || 'Unknown';
+    updateData.state = location.split(',')[1] || 'Unknown';
+    updateData.country = location.split(',')[2] || 'Unknown';
+  }
+  if (date) updateData.event_date = date;
+  if (time) {
+    updateData.start_time = time;
+    updateData.end_time = time;
+  }
+  if (capacity) updateData.capacity = parseInt(capacity);
+  if (price !== undefined) updateData.ticket_price = parseFloat(price);
+  if (status) updateData.status = status;
+  if (featured !== undefined) updateData.featured = featured;
+
+  // Extract uploaded files if any
+  if (req.files) {
+    if (req.files.banner_image && req.files.banner_image.length > 0) {
+      updateData.banner_image = `/uploads/${req.files.banner_image[0].filename}`;
+    }
+    if (req.files.additional_images && req.files.additional_images.length > 0) {
+      const additional_images = req.files.additional_images.map(f => `/uploads/${f.filename}`);
+      updateData.additional_images = JSON.stringify(additional_images);
+    }
+  }
 
   const updatedEvent = await eventModel.updateEvent(id, updateData);
 

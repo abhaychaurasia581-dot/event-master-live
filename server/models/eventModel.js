@@ -55,7 +55,7 @@ const eventModel = {
     const allowedFields = [
       'title', 'slug', 'description', 'category_id', 'venue', 'city', 'state', 'country',
       'event_date', 'start_time', 'end_time', 'capacity', 'available_seats', 'ticket_price',
-      'featured', 'status', 'banner_image', 'updated_by'
+      'featured', 'status', 'banner_image', 'additional_images', 'updated_by'
     ];
 
     allowedFields.forEach((field) => {

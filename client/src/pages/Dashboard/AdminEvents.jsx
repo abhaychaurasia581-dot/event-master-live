@@ -92,6 +92,13 @@ const AdminEvents = () => {
                       </span>
                     </td>
                     <td className="p-4 text-right space-x-2">
+                      <Link 
+                        to={`/dashboard/events/${event.id}/edit`}
+                        className="inline-block p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        title="Edit Event"
+                      >
+                        <Edit className="w-5 h-5" />
+                      </Link>
                       <button 
                         onClick={() => handleDelete(event.id)}
                         disabled={deleteMutation.isLoading}

@@ -30,6 +30,7 @@ import AdminUsers from './pages/Dashboard/AdminUsers';
 import AdminBookings from './pages/Dashboard/AdminBookings';
 import AdminRevenue from './pages/Dashboard/AdminRevenue';
 import CreateEvent from './pages/Dashboard/CreateEvent';
+import EditEvent from './pages/Dashboard/EditEvent';
 
 // Static Pages
 import PrivacyPolicy from './pages/Static/PrivacyPolicy';
