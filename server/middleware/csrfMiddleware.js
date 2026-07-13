@@ -32,8 +32,8 @@ const generateCsrfToken = (req, res) => {
 
   res.cookie(cookieName, csrfCookieValue, {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: 'strict',
+    secure: true, // Always true for cross-origin 'none'
+    sameSite: 'none', // Required for cross-domain CSRF (Render/Vercel)
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     path: '/'
   });
