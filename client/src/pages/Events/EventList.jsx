@@ -53,7 +53,7 @@ const EventCard = ({ event, isInitiallyWishlisted }) => {
       
       <div className="h-48 overflow-hidden relative bg-gray-200 flex items-center justify-center">
         {event.banner_image ? (
-          <img src={event.banner_image.startsWith('http') ? event.banner_image : `http://localhost:5000${event.banner_image}`} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <img src={event.banner_image.startsWith('http') ? event.banner_image : `${API_URL}${event.banner_image}`} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         ) : (
           <span className="text-gray-400 font-medium">No Image</span>
         )}
