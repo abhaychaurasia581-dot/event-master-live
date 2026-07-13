@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { registerUser, loginUser } from '../../services/authApi';
 import Button from '../../components/common/Button';
@@ -11,6 +11,7 @@ const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login } = useAuthStore();
   const navigate = useNavigate();
@@ -75,13 +76,22 @@ const Register = () => {
         />
         <Input 
           label="Password" 
-          type="password" 
+          type={showPassword ? 'text' : 'password'}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••"
           disabled={loading}
           required
           minLength={6}
+          rightElement={
+            <button 
+              type="button" 
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-gray-400 hover:text-gray-600 focus:outline-none"
+            >
+              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
+          }
         />
         <Button type="submit" variant="primary" className="w-full py-2.5 text-base mt-2" disabled={loading}>
           {loading ? 'Creating account...' : 'Sign Up'}

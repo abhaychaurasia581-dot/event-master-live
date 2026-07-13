@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { loginUser } from '../../services/authApi';
 import Button from '../../components/common/Button';
@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login, setPending2FA } = useAuthStore();
   const navigate = useNavigate();
@@ -67,12 +68,21 @@ const Login = () => {
         <div>
           <Input 
             label="Password" 
-            type="password" 
+            type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
             disabled={loading}
             required
+            rightElement={
+              <button 
+                type="button" 
+                onClick={() => setShowPassword(!showPassword)}
+                className="text-gray-400 hover:text-gray-600 focus:outline-none"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            }
           />
           <div className="flex justify-end mt-1">
             <a href="#" className="text-xs text-indigo-600 font-medium hover:underline">Forgot password?</a>
