@@ -88,7 +88,7 @@ const bookingModel = {
   async getUserBookings(userId, page = 1, limit = 10) {
     const offset = (page - 1) * limit;
     const query = `
-      SELECT b.*, e.title as event_title, e.start_date, e.venue
+      SELECT b.*, e.title as event_title, e.event_date, e.venue
       FROM bookings b
       JOIN events e ON b.event_id = e.id
       WHERE b.user_id = ? AND b.is_deleted = FALSE
