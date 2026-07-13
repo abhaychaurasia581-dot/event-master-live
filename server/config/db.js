@@ -4,9 +4,11 @@ const logger = require('../utils/logger');
 
 const pool = mysql.createPool({
   host: env.dbHost,
+  port: env.dbPort,
   user: env.dbUser,
   password: env.dbPassword,
   database: env.dbName,
+  ssl: { rejectUnauthorized: false }, // Required for Cloud DBs like Aiven
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
