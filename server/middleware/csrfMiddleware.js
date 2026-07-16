@@ -58,11 +58,21 @@ const validateCsrfToken = (req, res, next) => {
     return next();
   }
 
+  // 3. Exclude Public Auth Routes (Login/Register don't perform actions on behalf of an authenticated user)
+  if (req.originalUrl.includes('/api/v1/auth/login') || req.originalUrl.includes('/api/v1/auth/register')) {
+    return next();
+  }
+
+  // 4. Exclude requests using Authorization Bearer Header (immune to browser-based CSRF attacks)
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    return next();
+  }
+
   // (Optional) AI endpoints might be bypassed if called strictly via external integrations
   // if (req.originalUrl.includes('/api/v2/ai/')) return next();
 
   try {
-    // 3. Extract tokens from Header and HttpOnly Cookie
+    // 5. Extract tokens from Header and HttpOnly Cookie
     const clientToken = req.headers['x-csrf-token'] || req.headers['x-xsrf-token'];
     
     const isProduction = process.env.NODE_ENV === 'production';
