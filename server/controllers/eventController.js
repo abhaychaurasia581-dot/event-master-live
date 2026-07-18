@@ -63,10 +63,10 @@ exports.createEvent = asyncHandler(async (req, res) => {
 
   if (req.files) {
     if (req.files.banner_image && req.files.banner_image.length > 0) {
-      banner_image = `/uploads/${req.files.banner_image[0].filename}`;
+      banner_image = req.files.banner_image[0].path;
     }
     if (req.files.additional_images && req.files.additional_images.length > 0) {
-      additional_images = req.files.additional_images.map(f => `/uploads/${f.filename}`);
+      additional_images = req.files.additional_images.map(f => f.path);
     }
   }
   
@@ -183,10 +183,10 @@ exports.updateEvent = asyncHandler(async (req, res) => {
   // Extract uploaded files if any
   if (req.files) {
     if (req.files.banner_image && req.files.banner_image.length > 0) {
-      updateData.banner_image = `/uploads/${req.files.banner_image[0].filename}`;
+      updateData.banner_image = req.files.banner_image[0].path;
     }
     if (req.files.additional_images && req.files.additional_images.length > 0) {
-      const additional_images = req.files.additional_images.map(f => `/uploads/${f.filename}`);
+      const additional_images = req.files.additional_images.map(f => f.path);
       updateData.additional_images = JSON.stringify(additional_images);
     }
   }
