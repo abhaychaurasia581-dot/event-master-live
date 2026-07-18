@@ -79,9 +79,7 @@ const wishlistModel = {
           w.created_at as wishlisted_at
         FROM wishlists w
         JOIN events e ON w.event_id = e.id
-        WHERE w.user_id = ? 
-          AND e.status IN ('UPCOMING', 'ONGOING') 
-          AND e.event_date >= CURDATE()
+        WHERE w.user_id = ?
         ORDER BY w.created_at DESC
         LIMIT ? OFFSET ?
       `;
@@ -93,9 +91,7 @@ const wishlistModel = {
         SELECT COUNT(*) as total
         FROM wishlists w
         JOIN events e ON w.event_id = e.id
-        WHERE w.user_id = ? 
-          AND e.status IN ('UPCOMING', 'ONGOING')
-          AND e.event_date >= CURDATE()
+        WHERE w.user_id = ?
       `;
       const [countResult] = await pool.query(countQuery, [userId]);
       const total = countResult[0].total;
