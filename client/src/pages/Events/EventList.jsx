@@ -6,6 +6,7 @@ import { Calendar, MapPin, Heart, Sparkles } from 'lucide-react';
 import Button from '../../components/common/Button';
 import BackButton from '../../components/common/BackButton';
 import { wishlistApi } from '../../services/wishlistApi';
+import { aiApi } from '../../services/aiApi';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/authStore';
 
@@ -110,11 +111,42 @@ const EventList = () => {
     enabled: isAuthenticated,
   });
 
+  const [isAiMode, setIsAiMode] = React.useState(false);
+  const [aiLoading, setAiLoading] = React.useState(false);
+  const [aiEvents, setAiEvents] = React.useState([]);
+
+  const handleAiRecommendations = async () => {
+    if (!isAuthenticated) {
+      toast.error('Please login to get personalized AI recommendations!');
+      return;
+    }
+    
+    if (isAiMode) {
+      // Toggle off
+      setIsAiMode(false);
+      return;
+    }
+
+    try {
+      setAiLoading(true);
+      const res = await aiApi.getRecommendations();
+      setAiEvents(res.data || []);
+      setIsAiMode(true);
+      toast.success('Generated personalized recommendations! 🚀');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to generate AI recommendations. Please try again.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   if (isLoading) return <div className="text-center py-20 text-xl font-medium text-gray-500">Loading amazing events...</div>;
   if (error) return <div className="text-center py-20 text-red-500">Failed to load events. Please try again later.</div>;
 
   // The backend returns an ApiResponse where data.data is the actual array of events
-  const displayEvents = response?.data?.data || [];
+  const normalEvents = response?.data?.data || [];
+  const displayEvents = isAiMode ? aiEvents : normalEvents;
   
   // Create a Set of wishlisted event IDs for O(1) lookup safely
   const safeWishlistData = Array.isArray(wishlistResponse?.data?.events) ? wishlistResponse.data.events : [];
@@ -129,13 +161,23 @@ const EventList = () => {
           <p className="text-gray-500 mt-1">Find the best experiences happening around you</p>
         </div>
         
-        <Button variant="outline" className="flex items-center gap-2 bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 px-5">
-          <Sparkles className="h-4 w-4 text-indigo-600" />
-          AI Recommendations
+        <Button 
+          variant={isAiMode ? "solid" : "outline"}
+          onClick={handleAiRecommendations}
+          disabled={aiLoading}
+          className={`flex items-center gap-2 px-5 ${isAiMode ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'}`}
+        >
+          <Sparkles className={`h-4 w-4 ${isAiMode ? 'text-white' : 'text-indigo-600'}`} />
+          {aiLoading ? 'AI is thinking...' : (isAiMode ? 'Clear Recommendations' : 'AI Recommendations')}
         </Button>
       </div>
 
-      {displayEvents.length === 0 ? (
+      {aiLoading ? (
+        <div className="text-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-indigo-600 font-medium">Analyzing your preferences...</p>
+        </div>
+      ) : displayEvents.length === 0 ? (
         <div className="text-center py-20 text-gray-500 text-lg">No events found. Check back later or create one!</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
