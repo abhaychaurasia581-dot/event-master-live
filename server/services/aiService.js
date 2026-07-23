@@ -25,7 +25,7 @@ const aiService = {
       const pastEventIds = pastBookings.map(b => b.event_id);
       
       // 2. Fetch Pool of Upcoming Active Events (Limit to 50 for AI token efficiency)
-      const upcomingEventsResponse = await eventModel.getEvents({ status: 'PUBLISHED', limit: 50 });
+      const upcomingEventsResponse = await eventModel.getEvents({ status: 'UPCOMING', limit: 50 });
       const upcomingEvents = upcomingEventsResponse.data || [];
       
       if (upcomingEvents.length === 0) return [];
@@ -73,7 +73,7 @@ const aiService = {
     } catch (err) {
       logError(`AI Recommendation Failed, applying fallback: ${err.message}`);
       // Graceful fallback to deterministic upcoming events
-      const fallbackResponse = await eventModel.getEvents({ status: 'PUBLISHED', limit: 10 });
+      const fallbackResponse = await eventModel.getEvents({ status: 'UPCOMING', limit: 10 });
       return fallbackResponse.data || [];
     }
   },
@@ -200,7 +200,7 @@ const aiService = {
    */
   async getTrendingEvents(limit = 10) {
     try {
-      const response = await eventModel.getEvents({ status: 'PUBLISHED', limit });
+      const response = await eventModel.getEvents({ status: 'UPCOMING', limit });
       return response.data || [];
     } catch (err) {
       logError(`Trending Events Fetch Failed: ${err.message}`);
