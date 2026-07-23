@@ -25,7 +25,8 @@ const aiService = {
       const pastEventIds = pastBookings.map(b => b.event_id);
       
       // 2. Fetch Pool of Upcoming Active Events (Limit to 50 for AI token efficiency)
-      const upcomingEvents = await eventModel.getAllEvents({ status: 'PUBLISHED', upcoming: true, limit: 50 });
+      const upcomingEventsResponse = await eventModel.getEvents({ status: 'PUBLISHED', limit: 50 });
+      const upcomingEvents = upcomingEventsResponse.data || [];
       
       if (upcomingEvents.length === 0) return [];
 
@@ -72,7 +73,8 @@ const aiService = {
     } catch (err) {
       logError(`AI Recommendation Failed, applying fallback: ${err.message}`);
       // Graceful fallback to deterministic upcoming events
-      return eventModel.getAllEvents({ status: 'PUBLISHED', upcoming: true, limit: 10 });
+      const fallbackResponse = await eventModel.getEvents({ status: 'PUBLISHED', limit: 10 });
+      return fallbackResponse.data || [];
     }
   },
 
@@ -96,14 +98,14 @@ const aiService = {
       info(`AI Execution [smartSearch Parsed]: ${JSON.stringify(filters)} in ${Date.now() - startTime}ms`);
 
       // 2. Pass structured filters to existing Database logic
-      // Assuming eventModel.searchEvents accepts this filter payload format
-      const searchResults = await eventModel.searchEvents(filters);
-      return searchResults;
+      const searchResults = await eventModel.getEvents(filters);
+      return searchResults.data || [];
 
     } catch (err) {
       logError(`AI Smart Search Failed, falling back to full-text search: ${err.message}`);
       // Fallback: Just dump the raw query into the standard keyword search
-      return eventModel.searchEvents({ keywords: query });
+      const fallbackResponse = await eventModel.getEvents({ search: query });
+      return fallbackResponse.data || [];
     }
   },
 
@@ -155,10 +157,11 @@ const aiService = {
       if (!sourceEvent) throw new ApiError(404, 'Event not found');
 
       // Deterministic Fetch: Get events in the same category or location
-      const candidates = await eventModel.searchEvents({ 
-        category: sourceEvent.category_id,
+      const candidatesResponse = await eventModel.getEvents({ 
+        category_id: sourceEvent.category_id,
         limit: 15
       });
+      const candidates = candidatesResponse.data || [];
 
       // Filter out the source event itself
       const validCandidates = candidates.filter(e => e.id !== eventId);
@@ -187,7 +190,8 @@ const aiService = {
     } catch (err) {
       logError(`AI Similar Events Failed, applying fallback: ${err.message}`);
       // Fallback: Return events in same category
-      return eventModel.searchEvents({ category: eventId.category_id, limit: 5 });
+      const fallbackResponse = await eventModel.getEvents({ category_id: eventId.category_id, limit: 5 });
+      return fallbackResponse.data || [];
     }
   },
 
@@ -196,13 +200,8 @@ const aiService = {
    */
   async getTrendingEvents(limit = 10) {
     try {
-      // Assuming eventModel has a getTrendingEvents method that orders by bookings/views
-      if (eventModel.getTrendingEvents) {
-        return await eventModel.getTrendingEvents(limit);
-      }
-      
-      // Fallback if specific method isn't implemented: get latest upcoming events
-      return await eventModel.getAllEvents({ status: 'PUBLISHED', upcoming: true, limit });
+      const response = await eventModel.getEvents({ status: 'PUBLISHED', limit });
+      return response.data || [];
     } catch (err) {
       logError(`Trending Events Fetch Failed: ${err.message}`);
       throw new ApiError(500, 'Failed to fetch trending events');
